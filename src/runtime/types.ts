@@ -2,6 +2,12 @@ import type { ComputedRef, Ref } from 'vue'
 import type { RouterMethod } from 'h3'
 import type { SupportedProviders } from './composables/authjs/useAuth'
 
+export interface EndpointConfig {
+  path?: string
+  method?: RouterMethod
+  headers?: Record<string, string>
+}
+
 /**
  * Configuration for the global application-side authentication-middleware.
  */
@@ -77,19 +83,19 @@ export interface ProviderLocal {
      *
      * @default { path: '/login', method: 'post' }
      */
-    signIn?: { path?: string, method?: RouterMethod }
+    signIn?: EndpointConfig
     /**
      * What method and path to call to perform the sign-out. Set to false to disable.
      *
      * @default { path: '/logout', method: 'post' }
      */
-    signOut?: { path?: string, method?: RouterMethod } | false
+    signOut?: EndpointConfig | false
     /**
      * What method and path to call to perform the sign-up. Set to false to disable.
      *
      * @default { path: '/register', method: 'post' }
      */
-    signUp?: { path?: string, method?: RouterMethod } | false
+    signUp?: EndpointConfig | false
     /**
      * What method and path to call to fetch user / session data from. `nuxt-auth` will send the token received upon sign-in as a header along this request to authenticate.
      *
@@ -98,7 +104,7 @@ export interface ProviderLocal {
      * @default { path: '/session', method: 'get' }
      * @example { path: '/user', method: 'get' }
      */
-    getSession?: { path?: string, method?: RouterMethod }
+    getSession?: EndpointConfig
   }
   /**
    * Pages that `nuxt-auth` needs to know the location off for redirects.
@@ -230,7 +236,7 @@ export interface ProviderLocal {
      *
      * @default { path: '/refresh', method: 'post' }
      */
-    endpoint?: { path?: string, method?: RouterMethod }
+    endpoint?: EndpointConfig
     /**
      * When refreshOnlyToken is set to `true`, only the token will be updated when the refresh endpoint is called.
      * When refreshOnlyToken is set to `false`, the token and refreshToken will be updated when the refresh endpoint is called.

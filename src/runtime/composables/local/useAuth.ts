@@ -70,12 +70,18 @@ export function useAuth(): UseAuthReturn {
     signInParams?: Record<string, string>,
     signInHeaders?: Record<string, string>
   ): Promise<T | undefined> {
-    const { path, method } = config.endpoints.signIn
+    const { path, method, headers: configHeaders } = config.endpoints.signIn
+    const headers = new Headers(configHeaders)
+    if (signInHeaders) {
+      for (const key in signInHeaders) {
+        headers.set(key, signInHeaders[key])
+      }
+    }
     const response = await _fetch<T>(nuxt, path, {
       method,
       body: credentials,
       params: signInParams ?? {},
-      headers: signInHeaders ?? {}
+      headers
     }, /* proxyCookies = */ true)
 
     if (typeof response !== 'object' || response === null) {
@@ -132,13 +138,12 @@ export function useAuth(): UseAuthReturn {
   async function signOut<T = unknown>(signOutOptions?: SignOutOptions): Promise<T | undefined> {
     const signOutConfig = config.endpoints.signOut
 
-    let headers
+    let headers: Headers | undefined
     let body
     if (signOutConfig) {
-      headers = new Headers({ [config.token.headerName]: token.value } as HeadersInit)
-      // If the refresh provider is used, include the refreshToken in the body
+      headers = new Headers(signOutConfig.headers)
+      headers.set(config.token.headerName, token.value as string)
       if (config.refresh.isEnabled && ['post', 'put', 'patch', 'delete'].includes(signOutConfig.method.toLowerCase())) {
-        // This uses refresh token pointer as we are passing `refreshToken`
         const signoutRequestRefreshTokenPointer = config.refresh.token.refreshRequestTokenPointer
         body = objectFromJsonPointer(signoutRequestRefreshTokenPointer, refreshToken.value)
       }
@@ -169,10 +174,9 @@ export function useAuth(): UseAuthReturn {
   }
 
   async function getSession(getSessionOptions?: GetSessionOptions): Promise<SessionData | null | void> {
-    const { path, method } = config.endpoints.getSession
+    const { path, method, headers: configHeaders } = config.endpoints.getSession
 
     let tokenValue = token.value
-    // For cached responses, return the token directly from the cookie
     tokenValue ??= formatToken(_internal.rawTokenCookie.value, config)
 
     if (!tokenValue && !getSessionOptions?.force) {
@@ -180,9 +184,9 @@ export function useAuth(): UseAuthReturn {
       return
     }
 
-    const headers = new Headers()
+    const headers = new Headers(configHeaders)
     if (tokenValue) {
-      headers.append(config.token.headerName, tokenValue)
+      headers.set(config.token.headerName, tokenValue)
     }
 
     loading.value = true
@@ -222,12 +226,12 @@ export function useAuth(): UseAuthReturn {
       return
     }
 
-    const { path, method } = signUpEndpoint
+    const { path, method, headers } = signUpEndpoint
 
-    // Holds result from fetch to be returned if signUpOptions?.preventLoginFlow is true
     const result = await _fetch<T>(nuxt, path, {
       method,
-      body: credentials
+      body: credentials,
+      headers
     })
 
     if (signUpOptions?.preventLoginFlow) {
@@ -238,17 +242,15 @@ export function useAuth(): UseAuthReturn {
   }
 
   async function refresh(getSessionOptions?: GetSessionOptions) {
-    // Only refresh the session if the refresh logic is not enabled
     if (!config.refresh.isEnabled) {
       return getSession(getSessionOptions)
     }
 
-    const { path, method } = config.refresh.endpoint
+    const { path, method, headers: configHeaders } = config.refresh.endpoint
     const refreshRequestTokenPointer = config.refresh.token.refreshRequestTokenPointer
 
-    const headers = new Headers({
-      [config.token.headerName]: token.value
-    } as HeadersInit)
+    const headers = new Headers(configHeaders)
+    headers.set(config.token.headerName, token.value as string)
 
     const response = await _fetch<Record<string, any>>(nuxt, path, {
       method,

@@ -53,10 +53,10 @@ const defaultsByBackend: {
       login: '/login'
     },
     endpoints: {
-      signIn: { path: '/login', method: 'post' },
-      signOut: { path: '/logout', method: 'post' },
-      signUp: { path: '/register', method: 'post' },
-      getSession: { path: '/session', method: 'get' }
+      signIn: { path: '/login', method: 'post', headers: {} },
+      signOut: { path: '/logout', method: 'post', headers: {} },
+      signUp: { path: '/register', method: 'post', headers: {} },
+      getSession: { path: '/session', method: 'get', headers: {} }
     },
     token: {
       signInResponseTokenPointer: '/token',
@@ -75,7 +75,7 @@ const defaultsByBackend: {
     },
     refresh: {
       isEnabled: false,
-      endpoint: { path: '/refresh', method: 'post' },
+      endpoint: { path: '/refresh', method: 'post', headers: {} },
       refreshOnlyToken: true,
       token: {
         signInResponseRefreshTokenPointer: '/refreshToken',
